@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, ImageBackground, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useState } from 'react';
+import { Dimensions, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { Dungeon } from '../../src/game/Dungeon';
-import { Player } from '../../src/entities/Player';
-import { Sprites } from '../../src/assetsManager'; 
+import { Sprites } from './src/assetsManager';
+import { Player } from './src/entities/Player';
+import { Dungeon } from './src/game/Dungeon';
 
 const { width, height } = Dimensions.get('window');
 
