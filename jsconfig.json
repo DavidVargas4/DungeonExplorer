@@ -1,12 +1,18 @@
 {
   "compilerOptions": {
+    "target": "ES6",
+    "module": "commonjs",
     "jsx": "react-native",
-    "checkJs": false,
     "allowJs": true,
+    "checkJs": false,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
     }
   },
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    ".expo",
+    "web-build"
+  ]
 }

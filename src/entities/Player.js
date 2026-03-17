@@ -4,12 +4,14 @@ import { Image } from 'react-native';
 import { GameAssets } from '../constants/Sprites';
 
 export class Player {
-    constructor(x, y) {
+    constructor(x, y, sprite, width = 60, height = 60) {
         this.x = x;
         this.y = y;
-        this.width = 60;
-        this.height = 60;
-        this.estado = 'idle'; 
+        this.sprite = sprite;
+        this.width = width;  
+        this.height = height; 
+        this.vida = 3;
+        this.estado = 'idle';
     }
 
     mover(dir, w, h) {
