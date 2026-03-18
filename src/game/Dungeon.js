@@ -1,6 +1,6 @@
-import { Room } from './Room';
-import { Sprites } from '../../constants/sprites'; 
+import { Sprites } from '../../constants/sprites';
 import { HashTable } from '../structures/HashTable';
+import { Room } from './Room';
 
 export class Dungeon {
     constructor() {
@@ -10,16 +10,21 @@ export class Dungeon {
 
     generarMazmorra() {
         const s1 = new Room(
-                    "inicio", 
-                    "Catacumbas Olvidadas", 
-                     Sprites.room_exterior,
-                    "Nota del Padre: Kael, si lees esto, el Corazón no fue corrompido por accidente..."
-                    );
+            "inicio", 
+            "Catacumbas Olvidadas", 
+            Sprites.world.exterior, 
+            "Nota del Padre: Kael, el Corazón no fue corrompido por accidente..."
+        );
 
-        const s2 = new Room("pasillo", "Bosque de Hyrule", require('../../assets/images/Walls_street.png'));
+        const s2 = new Room(
+            "pasillo", 
+            "Bosque de Hyrule", 
+            Sprites.world.pasillo
+        );
 
-        s1.conexiones.push("pasillo");
-        s2.conexiones.push("inicio");
+        // [Norte, Sur, Oeste, Este]
+        s1.conexiones = ["pasillo", null, null, null];
+        s2.conexiones = [null, "inicio", null, null];
 
         this.salas.put(s1.id, s1);
         this.salas.put(s2.id, s2);
