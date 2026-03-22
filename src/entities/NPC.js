@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, View, Text } from 'react-native';
+import { Image, Text, View } from 'react-native';
 
 export class NPC {
     constructor(id, x, y, nombre, spriteSheet, dialogo ="") {

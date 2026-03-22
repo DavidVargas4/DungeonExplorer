@@ -1,12 +1,17 @@
+<<<<<<< HEAD
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, ImageBackground, TouchableOpacity, Dimensions } from 'react-native';
 import { Dungeon } from '../src/game/Dungeon';
 import { Player } from '../src/entities/Player';
 import { NPC } from '../src/entities/NPC';
+=======
+import React, { useEffect, useState } from 'react';
+import { Dimensions, Image, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+>>>>>>> eca333742af151b5042dc2db9f19531868c2cfc5
 import { Sprites } from '../constants/sprites';
-import { GameStory } from '../constants/Story'; 
-import { Combat } from '../src/systems/Combat';
-import { MenuUI } from '../src/ui/MenuUI';
+import { Player } from '../src/entities/Player';
+import { Dungeon } from '../src/game/Dungeon';
 
 const { width, height } = Dimensions.get('window');
 
@@ -21,66 +26,17 @@ export default function HomeScreen() {
   const [jugador] = useState(new Player(100, 650, Sprites.player_attack));
   const [salaActual, setSalaActual] = useState(mazmorra.obtenerSala("inicio"));
 
-  // --- EFECTO INICIAL ---
   useEffect(() => {
-    jugador.inventario.agregarItem("Brújula Antigua");
-    setTick(t => t + 1);
+    const inicial = mazmorra.obtenerSala("inicio");
+    if (inicial) {
+      setSalaActual(inicial);
+      setCargado(true);
+    }
   }, []);
 
-  // --- LÓGICA DE NARRATIVA ---
-  const siguienteHistoria = () => {
-    if (pasoStory < GameStory.length - 1) {
-      setPasoStory(pasoStory + 1);
-    } else {
-      setMostrarIntro(false); 
-    }
-  };
-
-  // --- RECOLECCIÓN (LinkedList Manual) ---
-  const revisarItems = () => {
-    if (salaActual.items) {
-      const listaItems = salaActual.items.toArray();
-      listaItems.forEach(it => {
-        if (!it.recogido) {
-          const dx = jugador.x - it.x;
-          const dy = jugador.y - it.y;
-          const distancia = Math.sqrt(dx * dx + dy * dy);
-
-          if (distancia < 50) {
-            it.recogido = true;
-            jugador.inventario.agregarItem(it.nombre);
-            setTick(t => t + 1);
-          }
-        }
-      });
-    }
-  };
-
-  // --- COMBATE (Animación de Espadazo) ---
-  const atacar = () => {
-    if (menuAbierto) return;
-    let frame = 0;
-    const intervalo = setInterval(() => {
-      jugador.frameX = frame;
-      setTick(t => t + 1);
-      frame++;
-      if (frame >= 6) {
-        clearInterval(intervalo);
-        jugador.frameX = 0;
-        setTick(t => t + 1);
-      }
-    }, 60);
-
-    if (salaActual.enemigos) {
-      salaActual.enemigos.toArray().forEach(enm => {
-        Combat.verificarAtaque(jugador, enm);
-      });
-    }
-  };
-
-  // --- MOVIMIENTO Y EXPLORACIÓN ---
   const manejarAccion = (dir) => {
-    if (menuAbierto) return;
+    const nPos = jugador.mover(dir, width, height);
+    setPos({ x: nPos.x, y: nPos.y });
 
     jugador.mover(dir, width, height);
     
@@ -172,58 +128,36 @@ export default function HomeScreen() {
     );
   }
 
-  // --- RENDER: JUEGO ---
   return (
     <View style={styles.container}>
+      {/* Fondo con color de rescate (Gris oscuro) */}
       <ImageBackground 
         source={salaActual.imagen} 
-        style={styles.mapa}
-        resizeMode="cover" // CORRECCIÓN: Para evitar el efecto de Tileset repetido
+        style={[styles.mapa, { backgroundColor: '#1a1a1a' }]} 
+        resizeMode="cover"
       >
-        
-        {/* ENTIDADES (POO) */}
-        {jugador.render()}
-        {salaActual.items?.toArray().map(it => it.render())}
-        {salaActual.enemigos?.toArray().map(enm => enm.render())}
-        {salaActual.npcs?.toArray().map(npc => npc.render())}
+        {/* HUD */}
+        <View style={styles.hud}>
+          <Text style={styles.textoHud}>🏰 {salaActual.nombre}</Text>
+          <Text style={styles.textoHud}>📍 X: {Math.round(pos.x)} Y: {Math.round(pos.y)}</Text>
+        </View>
 
-        {/* NARRATIVA EN SALA */}
+        {/* NOTA */}
         {salaActual.nota && (
           <View style={styles.cajaNota}>
             <Text style={styles.textoNota}>📜 {salaActual.nota}</Text>
           </View>
         )}
 
-        {/* HUD */}
-        <View style={styles.hud}>
-          <Text style={styles.textoHud}>📍 {salaActual.nombre}</Text>
-          <Text style={styles.textoHud}>🗺️ Mapeado: {salaActual.id === "corazon_aether" ? "100%" : "Explorando..."}</Text>
-          <Text style={styles.textoHud}>❤️ Vida: {jugador.vida}</Text>
+        {/* JUGADOR: Contenedor con color de rescate (Rojo) */}
+        <View style={[styles.playerBox, { left: pos.x, top: pos.y }]}>
+          <Image 
+            source={Sprites.player.idle} 
+            style={styles.sprite} 
+          />
+          {/* Si no ves la imagen, verás este cuadro rojo pequeño */}
+          <View style={{width: 10, height: 10, backgroundColor: 'red', position: 'absolute'}} />
         </View>
-
-        {/* BOTONES DE MENÚ */}
-        <View style={styles.botonesExtra}>
-            <TouchableOpacity onPress={() => setMenuAbierto('inventario')} style={styles.btnCircular}>
-                <Text style={{fontSize: 20}}>🎒</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setMenuAbierto('settings')} style={styles.btnCircular}>
-                <Text style={{fontSize: 20}}>⚙️</Text>
-            </TouchableOpacity>
-        </View>
-
-        {/* MODAL DEL MENÚ */}
-        {menuAbierto && (
-            <MenuUI 
-                tipo={menuAbierto} 
-                cerrar={() => setMenuAbierto(null)} 
-                items={jugador.inventario.obtenerLista()}
-            />
-        )}
-
-        {/* BOTÓN ATAQUE */}
-        <TouchableOpacity onPress={atacar} style={styles.botonAtaque}>
-           <Text style={{fontSize: 30}}>🗡️</Text>
-        </TouchableOpacity>
 
         {/* CONTROLES */}
         <View style={styles.controles}>
@@ -240,7 +174,6 @@ export default function HomeScreen() {
   );
 }
 
-// --- ESTILOS ---
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 

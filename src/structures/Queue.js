@@ -1,52 +1,30 @@
-class Node {
-    constructor(value) {
-        this.value = value;
-        this.next = null;
-    }
-}
-
-/**
- * Queue: Sistema de mensajes y diálogos de Valtheria.
- */
 export class Queue {
     constructor() {
-        this.front = null; // salida
-        this.back = null;  // entrada
-        this.length = 0;
+        this.items = [];
     }
 
-    // Encolar: Agrega al final (O(1))
-    enqueue(value) {
-        const newNode = new Node(value);
-        if (this.length === 0) {
-            this.front = newNode;
-            this.back = newNode;
-        } else {
-            this.back.next = newNode;
-            this.back = newNode;
-        }
-        this.length++;
+    enqueue(element) {
+        this.items.push(element);
     }
 
-    // Desencolar: Saca el primero (O(1))
     dequeue() {
-        if (!this.front) return null;
-        
-        const temp = this.front;
-        this.front = this.front.next;
-        this.length--;
-        
-        if (this.length === 0) {
-            this.back = null;
-        }
-        return temp.value;
+        if (this.isEmpty()) return "Underflow";
+        return this.items.shift();
     }
 
     isEmpty() {
-        return this.length === 0;
+        return this.items.length === 0;
     }
 
-    peek() {
-        return this.front ? this.front.value : null;
+    front() {
+        return this.items[0];
     }
 }
+
+// Lógica de combate (ejemplo):
+// let turno = new Queue();
+// turno.enqueue("Jugador");
+// turno.enqueue("Esqueleto");
+// turno.enqueue("Murciélago");
+// Al atacar: let atacanteActual = turno.dequeue(); 
+// Y luego lo vuelves a encolar: turno.enqueue(atacanteActual);

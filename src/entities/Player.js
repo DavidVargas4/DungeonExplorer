@@ -1,23 +1,20 @@
-import React from 'react';
-import { Image, View } from 'react-native'; 
-import { Inventory } from '../systems/Inventory';
-
 export class Player {
-    constructor(x, y, spriteSheet) { 
+    constructor(x, y, sprite) {
         this.x = x;
         this.y = y;
-        this.spriteSheet = spriteSheet; 
-        this.frameWidth = 84;  
-        this.frameHeight = 84; 
-        this.frameX = 0; 
-        this.frameY = 0; 
-        this.vida = 3;
-        this.inventario = new Inventory();
-        this.estado = 'idle';
+        this.sprite = sprite;
+        this.speed = 30; 
+        this.width = 64;
+        this.height = 64;
     }
 
-    animar() {
-        this.frameX = (this.frameX + 1) % 6; 
+    mover(dir, limiteW, limiteH) {
+        if (dir === 'up' && this.y > 0) this.y -= this.speed;
+        if (dir === 'down' && this.y < limiteH - 150) this.y += this.speed;
+        if (dir === 'left' && this.x > 0) this.x -= this.speed;
+        if (dir === 'right' && this.x < limiteW - 64) this.x += this.speed;
+
+        return { x: this.x, y: this.y };
     }
 
     recibirDaño(cantidad) { 
@@ -61,7 +58,6 @@ export class Player {
     }
 
     render() {
-    // Si por alguna razón la imagen no carga, que no se rompa la app
     if (!this.spriteSheet) return <View style={{position:'absolute', left:this.x, top:this.y, width:50, height:50, backgroundColor:'blue'}} />;
 
     return (
@@ -71,20 +67,17 @@ export class Player {
                 position: 'absolute',
                 left: this.x,
                 top: this.y,
-                width: 84, // Tamaño de la "ventana"
+                width: 84, 
                 height: 84,
-                overflow: 'hidden', // Esto corta el resto de la hoja
-                zIndex: 500, // Lo ponemos muy alto para que nada lo tape
-                // backgroundColor: 'rgba(255,0,0,0.3)', // Puedes dejar esto para debug, luego quítalo
+                overflow: 'hidden', 
+                zIndex: 500, 
             }}
         >
             <Image
                 source={this.spriteSheet}
                 style={{
-                    // IMPORTANTE: La imagen completa debe medir 84 * 6 de ancho y 84 * 4 de alto
                     width: 504, 
                     height: 336,
-                    // Movemos la hoja para mostrar el cuadro correcto
                     marginLeft: -(this.frameX * 84),
                     marginTop: -(this.frameY * 84),
                 }}

@@ -4,21 +4,30 @@ class Node {
         this.next = null;
     }
 }
+
 export class LinkedList {
-    constructor() { this.head = null; }
+    constructor() {
+        this.head = null;
+    }
+
+    toArray() {
+    let arr = [];
+    let curr = this.head;
+    while(curr) {
+        arr.push(curr.value);
+        curr = curr.next;
+    }
+    return arr;
+}
+
     add(value) {
         const newNode = new Node(value);
-        if (!this.head) this.head = newNode;
-        else {
-            let curr = this.head;
-            while (curr.next) curr = curr.next;
-            curr.next = newNode;
+        if (!this.head) {
+            this.head = newNode;
+        } else {
+            let current = this.head;
+            while (current.next) current = current.next;
+            current.next = newNode;
         }
-    }
-    toArray() {
-        let arr = [];
-        let curr = this.head;
-        while (curr) { arr.push(curr.value); curr = curr.next; }
-        return arr;
     }
 }

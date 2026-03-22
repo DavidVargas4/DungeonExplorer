@@ -1,13 +1,13 @@
 // constants/sprites.js
 
-export const Sprites = {
-    ui_inventory: require('../assets/images/inventory_sheet.png'),
-    ui_settings: require('../assets/images/settings_sheet.png'),
+export const GameAssets = {
+    // --- JUGADOR ---
+    player: {
+        idle: require('../assets/sprites/Fighter2Left_Idle.png'),
+        walk: require('../assets/sprites/Fighter2Left_Walk.png'),
+        attack: require('../assets/sprites/Fighter_sword_with_shadow.png'),
+    },
 
-        player_idle: require('../assets/sprites/Fighter2_Idle.png'),
-        player_walk: require('../assets/sprites/Fighter2_Walk.png'),
-        player_attack: require('../assets/sprites/Fighter_sword_with_shadow.png'), 
-    
     // --- ENEMIGOS ---
     enemies: {
         dummy: require('../assets/sprites/Attacked_Manequin1_with_shadow.png'),
@@ -33,4 +33,8 @@ export const Sprites = {
         pocion2: require('../assets/sprites/Potion_Pink.png'), //
     },
 
+    // --- OTROS ---
+    shadow: require('../assets/sprites/Different_characters_shadow.png'),
 };
+
+export const Sprites = GameAssets;

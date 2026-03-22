@@ -1,5 +1,4 @@
-import { Room } from './Room';
-import { Sprites } from '../../constants/sprites'; 
+import { Sprites } from '../../constants/sprites';
 import { HashTable } from '../structures/HashTable';
 import { Enemy } from '../entities/Enemy'; 
 import { Item } from '../entities/Item'; 
