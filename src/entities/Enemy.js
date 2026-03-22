@@ -1,16 +1,16 @@
 import React from 'react';
-import { Image } from 'react-native';
+import { Image, View } from 'react-native';
 import { Sprites } from '../../constants/sprites';
 
 export class Enemy {
     /**
-     * @param {string} id - Identificador único
-     * @param {number} x - Posición inicial X
-     * @param {number} y - Posición inicial Y
-     * @param {any} sprite - Imagen (require)
-     * @param {number} vida - Puntos de salud
+     * @param {string} id 
+     * @param {number} x 
+     * @param {number} y 
+     * @param {any} spriteSheet 
+     * @param {number} vida 
      */
-    constructor(id, x, y, sprite, vida = 2) {
+    constructor(id, x, y, spriteSheet, vida = 2) {
         this.id = id;
         this.x = x;
         this.y = y;

@@ -1,11 +1,9 @@
 export const Sprites = {
 
-    // --- JUGADOR ---
-    player: {
-        idle: require('../assets/sprites/Fighter2Left_Idle.png'),
-        walk: require('../assets/sprites/Fighter2Left_Walk.png'),
-        attack: require('../assets/sprites/Fighter_sword_with_shadow.png'),
-    },
+        player_idle: require('../assets/sprites/Fighter2Left_Idle.png'),
+        player_walk: require('../assets/sprites/Fighter2Left_Walk.png'),
+        player_attack: require('../assets/sprites/Fighter_sword_with_shadow.png'),
+    
 
     // --- ENEMIGOS ---
     enemies: {

@@ -1,20 +1,23 @@
+import React from 'react';
+import { Image, View } from 'react-native'; 
+import { Inventory } from '../systems/Inventory';
+
 export class Player {
-    constructor(x, y, sprite) {
+    constructor(x, y, spriteSheet) {
         this.x = x;
         this.y = y;
-        this.sprite = sprite;
-        this.speed = 30; 
-        this.width = 64;
-        this.height = 64;
+        this.spriteSheet = spriteSheet;
+        this.frameWidth = 90;  
+        this.frameHeight = 90; 
+        this.frameX = 0; 
+        this.frameY = 0;        
+        this.vida = 3;
+        this.inventario = new Inventory();
+        this.estado = 'idle';
     }
 
-    mover(dir, limiteW, limiteH) {
-        if (dir === 'up' && this.y > 0) this.y -= this.speed;
-        if (dir === 'down' && this.y < limiteH - 150) this.y += this.speed;
-        if (dir === 'left' && this.x > 0) this.x -= this.speed;
-        if (dir === 'right' && this.x < limiteW - 64) this.x += this.speed;
-
-        return { x: this.x, y: this.y };
+    animar() {
+        this.frameX = (this.frameX + 1) % 6; 
     }
 
     recibirDaño(cantidad) { 
@@ -24,7 +27,7 @@ export class Player {
 
     mover(dir, screenWidth, screenHeight) {
         this.estado = 'walk';
-        const paso = 15; 
+        const paso = 20; 
 
         if (dir === 'up') {
             this.y -= paso;
@@ -36,7 +39,7 @@ export class Player {
         }
         if (dir === 'left') {
             this.x -= paso;
-            this.frameY = 1;
+            this.frameY = 1; 
         }
         if (dir === 'right') {
             this.x += paso;
@@ -45,45 +48,47 @@ export class Player {
 
         this.animar();
 
-        if (this.x < -20) this.x = -20; // Permite salir un poco por la izquierda
+        // Límites de pantalla
+        if (this.x < -20) this.x = -20;
         if (this.y < 0) this.y = 0;
-        if (this.x > screenWidth - 40) this.x = screenWidth - 40; 
-        
-        if (this.y > screenHeight - this.frameHeight) this.y = screenHeight - this.frameHeight;
+        if (this.x > screenWidth - 40) this.x = screenWidth - 40;
+        if (this.y > screenHeight - 100) this.y = screenHeight - 100;
     }
 
     detener() {
         this.estado = 'idle';
-        this.frameX = 0; 
+        this.frameX = 0;
     }
 
     render() {
-    if (!this.spriteSheet) return <View style={{position:'absolute', left:this.x, top:this.y, width:50, height:50, backgroundColor:'blue'}} />;
+        if (!this.spriteSheet) {
+            return <View style={{position:'absolute', left:this.x, top:this.y, width:60, height:60, backgroundColor:'blue'}} />;
+        }
 
-    return (
-        <View 
-            key="player_container"
-            style={{
-                position: 'absolute',
-                left: this.x,
-                top: this.y,
-                width: 84, 
-                height: 84,
-                overflow: 'hidden', 
-                zIndex: 500, 
-            }}
-        >
-            <Image
-                source={this.spriteSheet}
+        return (
+            <View 
+                key="player_main"
                 style={{
-                    width: 504, 
-                    height: 336,
-                    marginLeft: -(this.frameX * 84),
-                    marginTop: -(this.frameY * 84),
+                    position: 'absolute',
+                    left: this.x,
+                    top: this.y,
+                    width: 84, 
+                    height: 84, 
+                    overflow: 'hidden', 
+                    zIndex: 100, 
                 }}
-                resizeMode="stretch" 
-            />
-        </View>
-    );
-}
+            >
+                <Image
+                    source={this.spriteSheet}
+                    style={{
+                        width: 504, 
+                        height: 336,
+                        marginLeft: -(this.frameX * 84),
+                        marginTop: -(this.frameY * 84),
+                    }}
+                    resizeMode="stretch"
+                />
+            </View>
+        );
+    }
 }

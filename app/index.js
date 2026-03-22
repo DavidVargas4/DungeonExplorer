@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, ImageBackground, TouchableOpacity, Dimensions } from 'react-native';
 import { Dungeon } from '../src/game/Dungeon';
-import { NPC } from '../src/entities/NPC';
-import { Sprites } from '../constants/sprites';
 import { Player } from '../src/entities/Player';
+import { Sprites } from '../constants/sprites';
+import { GameStory } from '../constants/Story'; 
+import { Combat } from '../src/systems/Combat';
+import { MenuUI } from '../src/ui/MenuUI';
 
 const { width, height } = Dimensions.get('window');
 
@@ -12,99 +14,149 @@ export default function HomeScreen() {
   const [menuAbierto, setMenuAbierto] = useState(null); 
   const [mostrarIntro, setMostrarIntro] = useState(true); 
   const [pasoStory, setPasoStory] = useState(0); 
-  const [tick, setTick] = useState(0); 
   const [mensajeDialogo, setMensajeDialogo] = useState(null);
+  const [tick, setTick] = useState(0); // Motor de renderizado
+
+  // --- INICIALIZACIÓN DE OBJETOS (POO) ---
   const [mazmorra] = useState(new Dungeon());
-  const [jugador] = useState(new Player(100, 650, Sprites.player_attack));
+  // Kael inicia en el suelo de la entrada
+  const [jugador] = useState(new Player(100, 600, Sprites.player_attack)); 
   const [salaActual, setSalaActual] = useState(mazmorra.obtenerSala("inicio"));
 
+  // --- EFECTO INICIAL ---
   useEffect(() => {
-    const inicial = mazmorra.obtenerSala("inicio");
-    if (inicial) {
-      setSalaActual(inicial);
-      setCargado(true);
-    }
+    jugador.inventario.agregarItem("Brújula de Cartógrafo");
+    setTick(t => t + 1);
   }, []);
 
-  const manejarAccion = (dir) => {
-    const nPos = jugador.mover(dir, width, height);
-    setPos({ x: nPos.x, y: nPos.y });
+  // --- LÓGICA NARRATIVA ---
+  const siguienteHistoria = () => {
+    if (pasoStory < GameStory.length - 1) {
+      setPasoStory(pasoStory + 1);
+    } else {
+      setMostrarIntro(false); 
+    }
+  };
 
-    jugador.mover(dir, width, height);
+  // --- LÓGICA DE RECOLECCIÓN ---
+  const revisarItems = () => {
+    if (salaActual.items) {
+      const listaItems = salaActual.items.toArray();
+      listaItems.forEach(it => {
+        if (!it.recogido) {
+          const dx = jugador.x - it.x;
+          const dy = jugador.y - it.y;
+          const distancia = Math.sqrt(dx * dx + dy * dy);
+
+          if (distancia < 50) {
+            it.recogido = true;
+            jugador.inventario.agregarItem(it.nombre);
+            setTick(t => t + 1);
+          }
+        }
+      });
+    }
+  };
+
+  // --- LÓGICA DE COMBATE ---
+  const atacar = () => {
+    if (menuAbierto || mostrarIntro) return;
     
+    // Animación de ataque (recorrer frames)
+    let frame = 0;
+    const intervalo = setInterval(() => {
+      jugador.frameX = frame;
+      setTick(t => t + 1);
+      frame++;
+      if (frame >= 6) {
+        clearInterval(intervalo);
+        jugador.frameX = 0;
+        setTick(t => t + 1);
+      }
+    }, 60);
 
+    // Verificar daño a enemigos
+    if (salaActual.enemigos) {
+      salaActual.enemigos.toArray().forEach(enm => {
+        Combat.verificarAtaque(jugador, enm);
+      });
+    }
+  };
+
+  // --- MANEJADOR DE ACCIONES (EL CORAZÓN DEL JUEGO) ---
+  const manejarAccion = (dir) => {
+    if (menuAbierto) return;
+
+    // 1. Mover al objeto jugador
+    jugador.mover(dir, width, height);
+
+    // 2. Lógica de Diálogos por Proximidad
     let dialogoCerca = null;
     if (salaActual.npcs) {
         salaActual.npcs.toArray().forEach(npc => {
+            npc.animar(); // Animar NPC
             const dx = jugador.x - npc.x;
             const dy = jugador.y - npc.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
 
-            if (dist < 70) { // Si Kael está cerca del NPC
+            if (dist < 80) { // Si Kael está cerca del NPC
                 dialogoCerca = npc.dialogo;
             }
         });
     }
     setMensajeDialogo(dialogoCerca);
 
-      // --- SENSOR DE CAMBIO DE SALA (DERECHA) ---
-    // Si Kael llega a la posición donde le permitimos detenerse (width - 45)
+    // 3. Sensor de Cambio de Sala (DERECHA / ADELANTE)
     if (jugador.x >= width - 45) {
-        const proximaSalaId = salaActual.conexiones[1]; // Miramos el índice 1 (Adelante)
-        
+        const proximaSalaId = salaActual.conexiones[1]; 
         if (proximaSalaId) {
             const nuevaSala = mazmorra.obtenerSala(proximaSalaId);
             if (nuevaSala) {
                 setSalaActual(nuevaSala);
-                jugador.x = 10; // Aparece a la izquierda de la nueva sala
-                setMensajeDialogo(null); // Limpiar diálogos
-            }
-        }
-    }
-
-    // 2. SI VA HACIA LA IZQUIERDA (ATRÁS)
-    if (jugador.x <= -15) {
-        const anteriorSalaId = salaActual.conexiones[0]; // Miramos el índice 0 (Atrás)
-        
-        if (anteriorSalaId) {
-            const nuevaSala = mazmorra.obtenerSala(anteriorSalaId);
-            if (nuevaSala) {
-                setSalaActual(nuevaSala);
-                // Kael aparece a la derecha de la sala anterior
-                // Usamos width - 60 para que no toque el sensor derecho inmediatamente
-                jugador.x = width - 65; 
+                jugador.x = 10; // Aparece a la izquierda
                 setMensajeDialogo(null);
             }
         }
     }
 
+    // 4. Sensor de Cambio de Sala (IZQUIERDA / ATRÁS)
+    if (jugador.x <= -15) {
+        const anteriorSalaId = salaActual.conexiones[0]; 
+        if (anteriorSalaId) {
+            const nuevaSala = mazmorra.obtenerSala(anteriorSalaId);
+            if (nuevaSala) {
+                setSalaActual(nuevaSala);
+                jugador.x = width - 65; // Aparece a la derecha
+                setMensajeDialogo(null);
+            }
+        }
+    }
+
+    // 5. IA de enemigos y Daño a Kael
+    if (salaActual.enemigos) {
+        salaActual.enemigos.toArray().forEach(enm => {
+            enm.actualizarIA(jugador.x, jugador.y);
+            Combat.verificarDañoJugador(jugador, enm);
+        });
+    }
+
+    // 6. Recolección de objetos
     revisarItems();
 
-    // Actualiza todo
+    // 7. Renderizar y Animación Idle
     setTick(t => t + 1);
     setTimeout(() => {
-        jugador.detener();
-        setTick(t => t + 1);
+        if (jugador.detener) {
+            jugador.detener();
+            setTick(t => t + 1);
+        }
     }, 200);
-};
+  };
 
   // --- RENDER: INTRODUCCIÓN ---
   if (mostrarIntro) {
     return (
-      <ImageBackground 
-        source={GameStory[pasoStory].bg} 
-        style={styles.introBg} 
-        resizeMode="cover"
-        blurRadius={3}
-      >
-        {mensajeDialogo && (
-            <View style={styles.cajaDialogo}>
-                <Text style={styles.nombreHabla}>ELÍAS:</Text>
-                <Text style={styles.textoDialogo}>{mensajeDialogo}</Text>
-                <Text style={styles.indicadorCerrar}>[ Acércate para escuchar ]</Text>
-            </View>
-        )}
-
+      <ImageBackground source={GameStory[pasoStory].bg} style={styles.introBg} resizeMode="cover" blurRadius={3}>
         <View style={styles.overlay}>
           <Text style={styles.tituloStory}>{GameStory[pasoStory].title}</Text>
           <View style={styles.cajaTexto}>
@@ -120,38 +172,64 @@ export default function HomeScreen() {
     );
   }
 
+  // --- RENDER: JUEGO ---
   return (
     <View style={styles.container}>
-      {/* Fondo con color de rescate (Gris oscuro) */}
-      <ImageBackground 
-        source={salaActual.imagen} 
-        style={[styles.mapa, { backgroundColor: '#1a1a1a' }]} 
-        resizeMode="cover"
-      >
-        {/* HUD */}
-        <View style={styles.hud}>
-          <Text style={styles.textoHud}>🏰 {salaActual.nombre}</Text>
-          <Text style={styles.textoHud}>📍 X: {Math.round(pos.x)} Y: {Math.round(pos.y)}</Text>
-        </View>
+      <ImageBackground source={salaActual.imagen} style={styles.mapa} resizeMode="cover">
+        
+        {/* Renderizado mediante POO */}
+        {jugador.render()}
+        {salaActual.items?.toArray().map(it => it.render())}
+        {salaActual.enemigos?.toArray().map(enm => enm.render())}
+        {salaActual.npcs?.toArray().map(npc => npc.render())}
 
-        {/* NOTA */}
+        {/* Diálogos */}
+        {mensajeDialogo && (
+          <View style={styles.cajaDialogo}>
+            <Text style={styles.nombreHabla}>ELÍAS (PADRE):</Text>
+            <Text style={styles.textoDialogo}>{mensajeDialogo}</Text>
+          </View>
+        )}
+
+        {/* Nota en Sala */}
         {salaActual.nota && (
           <View style={styles.cajaNota}>
             <Text style={styles.textoNota}>📜 {salaActual.nota}</Text>
           </View>
         )}
 
-        {/* JUGADOR: Contenedor con color de rescate (Rojo) */}
-        <View style={[styles.playerBox, { left: pos.x, top: pos.y }]}>
-          <Image 
-            source={Sprites.player.idle} 
-            style={styles.sprite} 
-          />
-          {/* Si no ves la imagen, verás este cuadro rojo pequeño */}
-          <View style={{width: 10, height: 10, backgroundColor: 'red', position: 'absolute'}} />
+        {/* HUD */}
+        <View style={styles.hud}>
+          <Text style={styles.textoHud}>📍 {salaActual.nombre}</Text>
+          <Text style={styles.textoHud}>🗺️ Mapeado: {salaActual.id === "altar" ? "100%" : "Explorando..."}</Text>
+          <Text style={styles.textoHud}>❤️ Vida: {jugador.vida}</Text>
         </View>
 
-        {/* CONTROLES */}
+        {/* Botones de Menú */}
+        <View style={styles.botonesExtra}>
+            <TouchableOpacity onPress={() => setMenuAbierto('inventario')} style={styles.btnCircular}>
+                <Text style={{fontSize: 20}}>🎒</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setMenuAbierto('settings')} style={styles.btnCircular}>
+                <Text style={{fontSize: 20}}>⚙️</Text>
+            </TouchableOpacity>
+        </View>
+
+        {/* Modales */}
+        {menuAbierto && (
+            <MenuUI 
+                tipo={menuAbierto} 
+                cerrar={() => setMenuAbierto(null)} 
+                items={jugador.inventario.obtenerLista()}
+            />
+        )}
+
+        {/* Botón Ataque */}
+        <TouchableOpacity onPress={atacar} style={styles.botonAtaque}>
+           <Text style={{fontSize: 30}}>🗡️</Text>
+        </TouchableOpacity>
+
+        {/* Controles */}
         <View style={styles.controles}>
           <TouchableOpacity onPress={() => manejarAccion('up')} style={styles.boton}><Text style={styles.flecha}>▲</Text></TouchableOpacity>
           <View style={{ flexDirection: 'row' }}>

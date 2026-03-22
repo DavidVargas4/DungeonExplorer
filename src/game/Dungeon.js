@@ -1,5 +1,7 @@
 import { Sprites } from '../../constants/sprites';
 import { HashTable } from '../structures/HashTable';
+import { Room } from './Room';
+import { Item } from '../entities/Item';
 import { Enemy } from '../entities/Enemy'; 
 import { NPC } from '../entities/NPC';
 
@@ -44,7 +46,6 @@ export class Dungeon {
             80, 660, 
             "Elías (Tu Padre)", 
             Sprites.npcs.citizen2,
-            "¡Kael! El Corazón de Aether está cerca.."
         );
         s3.npcs.add(elias); 
 
